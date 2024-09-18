@@ -13,9 +13,10 @@ namespace VDProjectXml
 		/// <summary>
 		/// Matches "key" [= "8:value"] with support for backslash escapes.
 		/// </summary>
-		private static readonly Regex ElementRegex = new Regex(@"^""([^""\\]*(?:\\.[^""\\]*)*)""(?:\s*=\s*""(\d+):([^""\\]*(?:\\.[^""\\]*)*)"")?$", RegexOptions.Singleline);
+		// private static readonly Regex ElementRegex = new Regex(@"^""([^""\\]*(?:\\.[^""\\]*)*)""(?:\s*=\s*""(\d+):([^""\\]*(?:\\.[^""\\]*)*)"")?$", RegexOptions.Singleline);
+        private static readonly Regex ElementRegex = new Regex(@"^""([^""\\]*(?:\\.[^""\\]*)*)""(?:\s*=\s*""(\d+):([^""\\]*(?:\\.[^""\\]*)*)"")?$", System.Text.RegularExpressions.RegexOptions.Singleline);
 
-		private const string Indent = "    ";
+        private const string Indent = "    ";
 
 		static void Main(string[] args)
 		{
@@ -91,40 +92,41 @@ namespace VDProjectXml
 			}
 		}
 
-		static void ConvertXmlVDProj(string vdrpojFile, string xmlFile)
-		{
-			int indentLevel = -1;
+        static void ConvertXmlVDProj(string xmlFile, string vdrpojFile)  // Reorder parameters for clarity
+        {
+            int indentLevel = -1;
 
-			using (StreamWriter writer = File.CreateText(vdrpojFile))
-			using (XmlReader reader = XmlReader.Create(xmlFile))
-			{
-				while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.Element)
-					{
-						if (reader.IsEmptyElement)
-						{
-							WriteIndent(writer, indentLevel);
-							WriteElement(reader, writer);
-						}
-						else
-						{
-							WriteIndent(writer, ++indentLevel);
-							WriteElement(reader, writer);
-							WriteIndent(writer, indentLevel);
-							writer.WriteLine("{");
-						}
-					}
-					else if (reader.NodeType == XmlNodeType.EndElement)
-					{
-						WriteIndent(writer, indentLevel--);
-						writer.WriteLine("}");
-					}
-				}
-			}
-		}
+            // The writer should be the output (.vdproj file) and reader should be the input (.xml file)
+            using (StreamWriter writer = File.CreateText(vdrpojFile))  // Output is .vdproj
+            using (XmlReader reader = XmlReader.Create(xmlFile))       // Input is .xml
+            {
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element)
+                    {
+                        if (reader.IsEmptyElement)
+                        {
+                            WriteIndent(writer, indentLevel);
+                            WriteElement(reader, writer);
+                        }
+                        else
+                        {
+                            WriteIndent(writer, ++indentLevel);
+                            WriteElement(reader, writer);
+                            WriteIndent(writer, indentLevel);
+                            writer.WriteLine("{");
+                        }
+                    }
+                    else if (reader.NodeType == XmlNodeType.EndElement)
+                    {
+                        WriteIndent(writer, indentLevel--);
+                        writer.WriteLine("}");
+                    }
+                }
+            }
+        }
 
-		private static void WriteElement(XmlReader reader, TextWriter writer)
+        private static void WriteElement(XmlReader reader, TextWriter writer)
 		{
 			string elementName = Escape(XmlConvert.DecodeName(reader.LocalName));
 
